@@ -19,7 +19,7 @@
             overflow-x: hidden;
         }
 
-        .game-container {
+        .game-container, .shop-container, .job-container, .task-container, .business-container, .inventory-container, .casino-container {
             width: 100%;
             max-width: 400px;
             margin: 10px;
@@ -32,10 +32,14 @@
             position: fixed;
             bottom: 10px;
             z-index: 1;
-            display: flex;
+            display: none;
             flex-direction: column;
             justify-content: space-between;
             min-height: 300px;
+        }
+
+        .game-container.active, .shop-container.active, .job-container.active, .task-container.active, .business-container.active, .inventory-container.active, .casino-container.active {
+            display: flex;
         }
 
         h1 {
@@ -97,79 +101,48 @@
             background: rgba(255, 255, 255, 0.2);
         }
 
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 1000;
-            justify-content: center;
+        .shop-list, .job-list, .task-list, .inventory-list, .casino, .business {
+            display: flex;
+            flex-direction: column;
             align-items: center;
         }
 
-        .modal-content {
-            width: 90%;
-            max-width: 400px;
-            background: rgba(20, 20, 30, 0.95);
-            border-radius: 20px;
-            padding: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(8px);
-            position: relative;
-            animation: fadeIn 0.3s ease-in;
-        }
-
-        .close-button {
-            position: absolute;
-            top: 10px;
-            right: 15px;
-            font-size: 1.5em;
-            color: #FFD700;
-            cursor: pointer;
-            background: none;
-            border: none;
-        }
-
-        h3 {
-            font-size: 1.3em;
-            margin: 10px 0;
-            color: #FFD700;
-            text-align: center;
-        }
-
-        button {
-            padding: 12px;
+        .shop-item {
+            display: flex;
+            align-items: center;
+            width: 100%;
             margin: 5px 0;
+        }
+
+        .shop-item img {
+            width: 64px;
+            height: 64px;
+            margin-right: 10px;
+            object-fit: contain;
+        }
+
+        .shop-item button {
+            flex: 1;
+            padding: 12px;
             font-size: 1em;
             background: linear-gradient(135deg, #6B7280, #4B5563);
             color: #E0E0E0;
             border: none;
             border-radius: 12px;
-            width: 100%;
-            max-width: 320px;
             cursor: pointer;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             transition: transform 0.2s, background 0.3s;
             touch-action: manipulation;
         }
 
-        button:disabled {
+        .shop-item button:disabled {
             background: #4B4B4B;
             cursor: not-allowed;
         }
 
-        button:hover:not(:disabled) {
+        .shop-item button:hover:not(:disabled) {
             transform: translateY(-2px);
             background: linear-gradient(135deg, #9CA3AF, #6B7280);
-        }
-
-        .job-list, .task-list, .shop-list, .inventory-list, .casino {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
         }
 
         .inventory-list {
@@ -222,14 +195,11 @@
             h1 {
                 font-size: 1.8em;
             }
-            h3 {
-                font-size: 1.2em;
-            }
-            button {
+            .shop-item button {
                 font-size: 0.9em;
                 padding: 10px;
             }
-            .game-container {
+            .game-container, .shop-container, .job-container, .task-container, .business-container, .inventory-container, .casino-container {
                 margin: 5px;
                 padding: 10px;
             }
@@ -244,11 +214,16 @@
             .tabs {
                 gap: 8px;
             }
+            .shop-item img {
+                width: 48px;
+                height: 48px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="game-container">
+    <!-- Main Game Container -->
+    <div class="game-container active" id="mainContainer">
         <h1>Rise to Riches</h1>
         <div class="stats">
             <div class="stats-left">
@@ -262,73 +237,111 @@
             </div>
         </div>
         <div class="tabs">
-            <button class="tab-button" onclick="openModal('jobsModal')">Работа</button>
-            <button class="tab-button" onclick="openModal('tasksModal')">Задания</button>
-            <button class="tab-button" onclick="openModal('shopModal')">Магазин</button>
-            <button class="tab-button" onclick="openModal('businessModal')">Бизнес</button>
-            <button class="tab-button" onclick="openModal('inventoryModal')">Инвентарь</button>
-            <button class="tab-button" onclick="openModal('casinoModal')">Казино</button>
+            <button class="tab-button" onclick="showSection('mainContainer')">Главная</button>
+            <button class="tab-button" onclick="showSection('jobContainer')">Работа (Задания)</button>
+            <button class="tab-button" onclick="showSection('taskContainer')">Задания</button>
+            <button class="tab-button" onclick="showSection('shopContainer')">Магазин</button>
+            <button class="tab-button" onclick="showSection('businessContainer')">Бизнес</button>
+            <button class="tab-button" onclick="showSection('inventoryContainer')">Инвентарь</button>
+            <button class="tab-button" onclick="showSection('casinoContainer')">Казино</button>
         </div>
     </div>
 
-    <!-- Modal for Jobs -->
-    <div class="modal" id="jobsModal">
-        <div class="modal-content">
-            <button class="close-button" onclick="closeModal('jobsModal')">×</button>
-            <h3>Работа</h3>
-            <div class="job-list" id="jobList"></div>
+    <!-- Job Container -->
+    <div class="job-container" id="jobContainer">
+        <h1>Работа</h1>
+        <div class="job-list" id="jobList"></div>
+        <div class="task-list" id="jobTaskList"></div>
+        <div class="tabs">
+            <button class="tab-button" onclick="showSection('mainContainer')">Главная</button>
+            <button class="tab-button" onclick="showSection('jobContainer')">Работа (Задания)</button>
+            <button class="tab-button" onclick="showSection('taskContainer')">Задания</button>
+            <button class="tab-button" onclick="showSection('shopContainer')">Магазин</button>
+            <button class="tab-button" onclick="showSection('businessContainer')">Бизнес</button>
+            <button class="tab-button" onclick="showSection('inventoryContainer')">Инвентарь</button>
+            <button class="tab-button" onclick="showSection('casinoContainer')">Казино</button>
         </div>
     </div>
 
-    <!-- Modal for Tasks -->
-    <div class="modal" id="tasksModal">
-        <div class="modal-content">
-            <button class="close-button" onclick="closeModal('tasksModal')">×</button>
-            <h3>Задания</h3>
-            <div class="task-list" id="taskList"></div>
+    <!-- Social Tasks Container -->
+    <div class="task-container" id="taskContainer">
+        <h1>Задания</h1>
+        <div class="task-list" id="socialTaskList"></div>
+        <div class="tabs">
+            <button class="tab-button" onclick="showSection('mainContainer')">Главная</button>
+            <button class="tab-button" onclick="showSection('jobContainer')">Работа (Задания)</button>
+            <button class="tab-button" onclick="showSection('taskContainer')">Задания</button>
+            <button class="tab-button" onclick="showSection('shopContainer')">Магазин</button>
+            <button class="tab-button" onclick="showSection('businessContainer')">Бизнес</button>
+            <button class="tab-button" onclick="showSection('inventoryContainer')">Инвентарь</button>
+            <button class="tab-button" onclick="showSection('casinoContainer')">Казино</button>
         </div>
     </div>
 
-    <!-- Modal for Shop -->
-    <div class="modal" id="shopModal">
-        <div class="modal-content">
-            <button class="close-button" onclick="closeModal('shopModal')">×</button>
-            <h3>Магазин</h3>
-            <div class="shop-list" id="shopList"></div>
+    <!-- Shop Container -->
+    <div class="shop-container" id="shopContainer">
+        <h1>Магазин</h1>
+        <div class="shop-list" id="shopList"></div>
+        <div class="tabs">
+            <button class="tab-button" onclick="showSection('mainContainer')">Главная</button>
+            <button class="tab-button" onclick="showSection('jobContainer')">Работа (Задания)</button>
+            <button class="tab-button" onclick="showSection('taskContainer')">Задания</button>
+            <button class="tab-button" onclick="showSection('shopContainer')">Магазин</button>
+            <button class="tab-button" onclick="showSection('businessContainer')">Бизнес</button>
+            <button class="tab-button" onclick="showSection('inventoryContainer')">Инвентарь</button>
+            <button class="tab-button" onclick="showSection('casinoContainer')">Казино</button>
         </div>
     </div>
 
-    <!-- Modal for Business -->
-    <div class="modal" id="businessModal">
-        <div class="modal-content">
-            <button class="close-button" onclick="closeModal('businessModal')">×</button>
-            <h3>Бизнес</h3>
-            <div class="business">
-                <button onclick="buyBusiness()" disabled id="businessButton">Открыть бизнес ($50,000)</button>
-                <button onclick="upgradeBusiness()" disabled id="upgradeBusinessButton">Улучшить бизнес ($100,000)</button>
-            </div>
+    <!-- Business Container -->
+    <div class="business-container" id="businessContainer">
+        <h1>Бизнес</h1>
+        <div class="business">
+            <button onclick="buyBusiness()" disabled id="businessButton">Открыть бизнес ($50,000)</button>
+            <button onclick="upgradeBusiness()" disabled id="upgradeBusinessButton">Улучшить бизнес ($100,000)</button>
+        </div>
+        <div class="tabs">
+            <button class="tab-button" onclick="showSection('mainContainer')">Главная</button>
+            <button class="tab-button" onclick="showSection('jobContainer')">Работа (Задания)</button>
+            <button class="tab-button" onclick="showSection('taskContainer')">Задания</button>
+            <button class="tab-button" onclick="showSection('shopContainer')">Магазин</button>
+            <button class="tab-button" onclick="showSection('businessContainer')">Бизнес</button>
+            <button class="tab-button" onclick="showSection('inventoryContainer')">Инвентарь</button>
+            <button class="tab-button" onclick="showSection('casinoContainer')">Казино</button>
         </div>
     </div>
 
-    <!-- Modal for Inventory -->
-    <div class="modal" id="inventoryModal">
-        <div class="modal-content">
-            <button class="close-button" onclick="closeModal('inventoryModal')">×</button>
-            <h3>Инвентарь</h3>
-            <div class="inventory-list" id="inventoryList">Пусто</div>
+    <!-- Inventory Container -->
+    <div class="inventory-container" id="inventoryContainer">
+        <h1>Инвентарь</h1>
+        <div class="inventory-list" id="inventoryList">Пусто</div>
+        <div class="tabs">
+            <button class="tab-button" onclick="showSection('mainContainer')">Главная</button>
+            <button class="tab-button" onclick="showSection('jobContainer')">Работа (Задания)</button>
+            <button class="tab-button" onclick="showSection('taskContainer')">Задания</button>
+            <button class="tab-button" onclick="showSection('shopContainer')">Магазин</button>
+            <button class="tab-button" onclick="showSection('businessContainer')">Бизнес</button>
+            <button class="tab-button" onclick="showSection('inventoryContainer')">Инвентарь</button>
+            <button class="tab-button" onclick="showSection('casinoContainer')">Казино</button>
         </div>
     </div>
 
-    <!-- Modal for Casino -->
-    <div class="modal" id="casinoModal">
-        <div class="modal-content">
-            <button class="close-button" onclick="closeModal('casinoModal')">×</button>
-            <h3>Казино</h3>
-            <div class="casino">
-                <button onclick="playCasino(100)">Ставка $100</button>
-                <button onclick="playCasino(1000)">Ставка $1,000</button>
-                <button onclick="playCasino(10000)">Ставка $10,000</button>
-            </div>
+    <!-- Casino Container -->
+    <div class="casino-container" id="casinoContainer">
+        <h1>Казино</h1>
+        <div class="casino">
+            <button onclick="playCasino(100)">Ставка $100</button>
+            <button onclick="playCasino(1000)">Ставка $1,000</button>
+            <button onclick="playCasino(10000)">Ставка $10,000</button>
+        </div>
+        <div class="tabs">
+            <button class="tab-button" onclick="showSection('mainContainer')">Главная</button>
+            <button class="tab-button" onclick="showSection('jobContainer')">Работа (Задания)</button>
+            <button class="tab-button" onclick="showSection('taskContainer')">Задания</button>
+            <button class="tab-button" onclick="showSection('shopContainer')">Магазин</button>
+            <button class="tab-button" onclick="showSection('businessContainer')">Бизнес</button>
+            <button class="tab-button" onclick="showSection('inventoryContainer')">Инвентарь</button>
+            <button class="tab-button" onclick="showSection('casinoContainer')">Казино</button>
         </div>
     </div>
 
@@ -354,6 +367,7 @@
         let debtRepaymentActive = false;
         let isWorking = false;
         let workTimeout = null;
+        let socialTaskCooldowns = {};
 
         const statuses = [
             { name: "Бомж", minBalance: 0 },
@@ -383,8 +397,7 @@
                 tasks: [
                     { name: "Доставить посылку", pay: 100, energy: 10 },
                     { name: "Развести еду", pay: 120, energy: 10 },
-                    { name: "Доставить пиццу", pay: 110, energy: 10 },
-                    { name: "Подписаться на Telegram канал", pay: 50, energy: 5 }
+                    { name: "Доставить пиццу", pay: 110, energy: 10 }
                 ] 
             },
             postman: { 
@@ -416,8 +429,7 @@
                 tasks: [
                     { name: "Написать статью", pay: 300, energy: 10 },
                     { name: "Сделать логотип", pay: 350, energy: 10 },
-                    { name: "Создать сайт", pay: 400, energy: 10 },
-                    { name: "Подписаться на Telegram канал", pay: 50, energy: 5 }
+                    { name: "Создать сайт", pay: 400, energy: 10 }
                 ] 
             },
             influencer: { 
@@ -444,21 +456,26 @@
             }
         };
 
+        const socialTasks = [
+            { name: "Подписаться на Telegram канал", pay: 50, energy: 5, cooldown: 300000 }, // 5 minutes
+            { name: "Поделиться в соцсетях", pay: 100, energy: 10, cooldown: 600000 } // 10 minutes
+        ];
+
         const shopItems = [
-            { name: "Хлеб", price: 5, desc: "Простая еда", effect: { hunger: 20 } },
-            { name: "Энергетик", price: 20, desc: "Восстанавливает энергию", effect: { energy: 50 } },
-            { name: "Метла", price: 100, desc: "Уборка эффективнее", effect: { payMultiplier: 1.2 }, job: "cleaner" },
-            { name: "Кроссовки", price: 200, desc: "Стильная обувь", effect: { taskPayMultiplier: 1.1 } },
-            { name: "Велосипед", price: 500, desc: "Быстрее доставлять", effect: { tipChance: 0.5, tipMultiplier: 1.5 }, job: "courier" },
-            { name: "Машина (Лада)", price: 5000, desc: "Бюджетный автомобиль", effect: { taskPayMultiplier: 1.5 }, job: "taxi" },
-            { name: "Ноутбук", price: 10000, desc: "Работа быстрее", effect: { payMultiplier: 1.3 }, job: "freelancer" },
-            { name: "Камера", price: 20000, desc: "Контент лучше", effect: { payMultiplier: 1.4 }, job: "influencer" },
-            { name: "Машина (BMW)", price: 50000, desc: "Стильный транспорт", effect: { taskPayMultiplier: 2 }, job: "taxi" },
-            { name: "Квартира", price: 50000, desc: "Уютное жилье", effect: { mood: 20 } },
-            { name: "Дом", price: 200000, desc: "Просторный коттедж", effect: { mood: 30 } },
-            { name: "Бассейн", price: 500000, desc: "Личная зона отдыха", effect: { mood: 40 } },
-            { name: "Яхта", price: 1000000, desc: "Морские приключения", effect: { mood: 50 } },
-            { name: "Частный самолет", price: 5000000, desc: "Полеты без границ", effect: { mood: 60 } }
+            { name: "Хлеб", price: 5, desc: "Простая еда", effect: { hunger: 20 }, image: "bread.png" },
+            { name: "Энергетик", price: 20, desc: "Восстанавливает энергию", effect: { energy: 50 }, image: "energy_drink.png" },
+            { name: "Метла", price: 100, desc: "Уборка эффективнее", effect: { payMultiplier: 1.2 }, job: "cleaner", image: "broom.png" },
+            { name: "Кроссовки", price: 200, desc: "Стильная обувь", effect: { taskPayMultiplier: 1.1 }, image: "sneakers.png" },
+            { name: "Велосипед", price: 500, desc: "Быстрее доставлять", effect: { tipChance: 0.5, tipMultiplier: 1.5 }, job: "courier", image: "bike.png" },
+            { name: "Машина (Лада)", price: 5000, desc: "Бюджетный автомобиль", effect: { taskPayMultiplier: 1.5 }, job: "taxi", image: "lada.png" },
+            { name: "Ноутбук", price: 10000, desc: "Работа быстрее", effect: { payMultiplier: 1.3 }, job: "freelancer", image: "laptop.png" },
+            { name: "Камера", price: 20000, desc: "Контент лучше", effect: { payMultiplier: 1.4 }, job: "influencer", image: "camera.png" },
+            { name: "Машина (BMW)", price: 50000, desc: "Стильный транспорт", effect: { taskPayMultiplier: 2 }, job: "taxi", image: "bmw.png" },
+            { name: "Квартира", price: 50000, desc: "Уютное жилье", effect: { mood: 20 }, image: "apartment.png" },
+            { name: "Дом", price: 200000, desc: "Просторный коттедж", effect: { mood: 30 }, image: "house.png" },
+            { name: "Бассейн", price: 500000, desc: "Личная зона отдыха", effect: { mood: 40 }, image: "pool.png" },
+            { name: "Яхта", price: 1000000, desc: "Морские приключения", effect: { mood: 50 }, image: "yacht.png" },
+            { name: "Частный самолет", price: 5000000, desc: "Полеты без границ", effect: { mood: 60 }, image: "jet.png" }
         ];
 
         // Save game state to localStorage
@@ -473,7 +490,8 @@
                 businessOwned,
                 businessLevel,
                 status,
-                debtRepaymentActive
+                debtRepaymentActive,
+                socialTaskCooldowns
             };
             localStorage.setItem('riseToRichesState', JSON.stringify(gameState));
         }
@@ -493,19 +511,30 @@
                 businessLevel = gameState.businessLevel || 0;
                 status = gameState.status || "Бомж";
                 debtRepaymentActive = gameState.debtRepaymentActive || false;
+                socialTaskCooldowns = gameState.socialTaskCooldowns || {};
             }
         }
 
-        // Open modal
-        function openModal(modalId) {
-            document.getElementById(modalId).style.display = 'flex';
+        // Show specific section
+        function showSection(sectionId) {
+            const sections = ['mainContainer', 'jobContainer', 'taskContainer', 'shopContainer', 'businessContainer', 'inventoryContainer', 'casinoContainer'];
+            sections.forEach(id => {
+                document.getElementById(id).classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
             playSound("clickSound");
-        }
-
-        // Close modal
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-            playSound("clickSound");
+            if (sectionId === 'jobContainer') {
+                updateJobAvailability();
+                updateJobTaskList();
+            } else if (sectionId === 'taskContainer') {
+                updateSocialTaskList();
+            } else if (sectionId === 'shopContainer') {
+                updateShopAvailability();
+            } else if (sectionId === 'businessContainer') {
+                updateBusinessAvailability();
+            } else if (sectionId === 'casinoContainer') {
+                updateCasinoAvailability();
+            }
         }
 
         // Update balance and status
@@ -567,13 +596,14 @@
         // Update energy, hunger, and mood displays
         function updateEnergy() {
             document.getElementById("energy").textContent = Math.floor(energy);
-            updateTaskList();
+            updateJobTaskList();
+            updateSocialTaskList();
             saveGame();
         }
 
         function updateHunger() {
             document.getElementById("hunger").textContent = Math.floor(hunger);
-            updateTaskList();
+            updateJobTaskList();
             saveGame();
         }
 
@@ -617,9 +647,10 @@
             }
         }
 
-        // Update task list based on current job
-        function updateTaskList() {
-            const taskList = document.getElementById("taskList");
+        // Update job-specific task list
+        function updateJobTaskList() {
+            const taskList = document.getElementById("jobTaskList");
+            if (!taskList) return;
             taskList.innerHTML = "";
             if (currentJob) {
                 if (isWorking) {
@@ -629,7 +660,7 @@
                         const button = document.createElement("button");
                         button.textContent = `${task.name} ($${task.pay}, ${task.energy} энергии)`;
                         button.disabled = energy < task.energy || isWorking;
-                        button.onclick = () => doTask(task);
+                        button.onclick = () => doJobTask(task);
                         taskList.appendChild(button);
                     });
                 }
@@ -638,22 +669,46 @@
             }
         }
 
+        // Update social task list
+        function updateSocialTaskList() {
+            const taskList = document.getElementById("socialTaskList");
+            taskList.innerHTML = "";
+            socialTasks.forEach(task => {
+                const button = document.createElement("button");
+                const isOnCooldown = socialTaskCooldowns[task.name] && Date.now() < socialTaskCooldowns[task.name];
+                const timeLeft = isOnCooldown ? Math.ceil((socialTaskCooldowns[task.name] - Date.now()) / 1000) : 0;
+                button.textContent = isOnCooldown 
+                    ? `${task.name} ($${task.pay}, ${task.energy} энергии, ожидание ${timeLeft} сек)`
+                    : `${task.name} ($${task.pay}, ${task.energy} энергии)`;
+                button.disabled = energy < task.energy || isOnCooldown;
+                button.onclick = () => doSocialTask(task);
+                taskList.appendChild(button);
+            });
+        }
+
         // Update shop availability
         function updateShopAvailability() {
             const shopList = document.getElementById("shopList");
             shopList.innerHTML = "";
             shopItems.forEach(item => {
+                const itemDiv = document.createElement("div");
+                itemDiv.className = "shop-item";
+                const img = document.createElement("img");
+                img.src = item.image;
+                img.alt = item.name;
                 const button = document.createElement("button");
                 button.textContent = `${item.name} ($${item.price.toLocaleString()})`;
                 button.disabled = balance < item.price;
                 button.onclick = () => buyItem(item);
-                shopList.appendChild(button);
+                itemDiv.appendChild(img);
+                itemDiv.appendChild(button);
+                shopList.appendChild(itemDiv);
             });
         }
 
         // Update casino availability
         function updateCasinoAvailability() {
-            const casinoButtons = document.querySelectorAll('#casinoModal button:not(.close-button)');
+            const casinoButtons = document.querySelectorAll('#casinoContainer button:not(.tab-button)');
             casinoButtons.forEach(button => {
                 const bet = parseInt(button.textContent.match(/\d+/)[0].replace(/,/g, ''));
                 button.disabled = balance < bet;
@@ -682,15 +737,15 @@
         // Select a job
         function takeJob(jobKey) {
             currentJob = jobs[jobKey];
-            updateTaskList();
+            updateJobTaskList();
             showNotification(`Вы устроились на работу: ${currentJob.name}`);
             playSound("clickSound");
-            closeModal('jobsModal');
+            showSection('jobContainer');
             saveGame();
         }
 
-        // Complete a task
-        function doTask(task) {
+        // Complete a job-specific task
+        function doJobTask(task) {
             if (energy >= task.energy && !isWorking) {
                 isWorking = true;
                 energy -= task.energy;
@@ -730,7 +785,7 @@
                 showNotification(`Начато задание "${task.name}". Завершится через ${Math.floor(duration/1000)} сек.`);
 
                 // Disable task buttons during work
-                updateTaskList();
+                updateJobTaskList();
 
                 // Complete task after duration
                 workTimeout = setTimeout(() => {
@@ -748,14 +803,41 @@
                     updateBalance();
                     updateEnergy();
                     updateMood();
-                    updateTaskList();
+                    updateJobTaskList();
                 }, duration);
 
                 updateEnergy();
                 updateMood();
-                closeModal('tasksModal');
+                showSection('jobContainer');
             } else if (isWorking) {
                 showNotification("Вы уже выполняете задание!");
+            } else {
+                showNotification("Недостаточно энергии! Купите энергетик в магазине.");
+            }
+        }
+
+        // Complete a social task
+        function doSocialTask(task) {
+            if (energy >= task.energy && (!socialTaskCooldowns[task.name] || Date.now() >= socialTaskCooldowns[task.name])) {
+                energy -= task.energy;
+                let pay = task.pay;
+                if (balance < 0) {
+                    const repayment = Math.min(pay, -balance);
+                    balance += repayment;
+                    showNotification(`Погашено долга: $${repayment}`);
+                    pay -= repayment;
+                }
+                balance += pay;
+                socialTaskCooldowns[task.name] = Date.now() + task.cooldown;
+                showNotification(`Задание "${task.name}" выполнено! Вы заработали $${pay}`);
+                playSound("cashSound");
+                createCoinAnimation();
+                updateBalance();
+                updateEnergy();
+                updateSocialTaskList();
+                saveGame();
+            } else if (socialTaskCooldowns[task.name] && Date.now() < socialTaskCooldowns[task.name]) {
+                showNotification("Задание на перезарядке! Подождите.");
             } else {
                 showNotification("Недостаточно энергии! Купите энергетик в магазине.");
             }
@@ -790,7 +872,7 @@
                 playSound("cashSound");
                 updateBalance();
                 updateInventory();
-                closeModal('shopModal');
+                updateShopAvailability();
             }
         }
 
@@ -804,7 +886,7 @@
                 startBusinessIncome();
                 playSound("cashSound");
                 updateBalance();
-                closeModal('businessModal');
+                showSection('businessContainer');
             }
         }
 
@@ -816,7 +898,7 @@
                 showNotification("Бизнес улучшен! Теперь вы зарабатываете $2,000/сек!");
                 playSound("cashSound");
                 updateBalance();
-                closeModal('businessModal');
+                showSection('businessContainer');
             }
         }
 
@@ -859,7 +941,7 @@
                 showNotification(outcome);
                 playSound("cashSound");
                 updateBalance();
-                closeModal('casinoModal');
+                showSection('casinoContainer');
             } else {
                 showNotification("Недостаточно средств для ставки!");
             }
@@ -908,7 +990,8 @@
         // Initialize game
         loadGame();
         updateBalance();
-        updateTaskList();
+        updateJobTaskList();
+        updateSocialTaskList();
         updateShopAvailability();
         updateInventory();
         updateEnergy();
