@@ -12,8 +12,9 @@
             background-size: cover;
             color: #fff;
             display: flex;
-            justify-content: center;
-            align-items: flex-start;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
             min-height: 100vh;
             overflow-x: hidden;
         }
@@ -23,12 +24,13 @@
             max-width: 400px;
             margin: 10px;
             padding: 15px;
-            background: rgba(20, 20, 30, 0.85);
+            background: rgba(20, 20, 30, 0.7);
             border-radius: 20px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
             backdrop-filter: blur(8px);
             box-sizing: border-box;
-            position: relative;
+            position: fixed;
+            bottom: 10px;
             z-index: 1;
             display: flex;
             flex-direction: column;
@@ -335,6 +337,11 @@
     <audio id="cashSound" src="cash.mp3"></audio>
 
     <script>
+        // Initialize Telegram Web App for fullscreen
+        if (window.Telegram && window.Telegram.WebApp) {
+            window.Telegram.WebApp.expand();
+        }
+
         let balance = 0;
         let energy = 100;
         let hunger = 100;
@@ -440,16 +447,54 @@
         const shopItems = [
             { name: "Хлеб", price: 5, desc: "Простая еда", effect: { hunger: 20 } },
             { name: "Энергетик", price: 20, desc: "Восстанавливает энергию", effect: { energy: 50 } },
+            { name: "Метла", price: 100, desc: "Уборка эффективнее", effect: { payMultiplier: 1.2 }, job: "cleaner" },
             { name: "Кроссовки", price: 200, desc: "Стильная обувь", effect: { taskPayMultiplier: 1.1 } },
-            { name: "Велосипед", price: 500, desc: "Быстрее передвигаться", effect: { taskPayMultiplier: 1.2 } },
-            { name: "Машина (Лада)", price: 5000, desc: "Бюджетный автомобиль", effect: { taskPayMultiplier: 1.5 } },
-            { name: "Машина (BMW)", price: 50000, desc: "Стильный транспорт", effect: { taskPayMultiplier: 2 } },
+            { name: "Велосипед", price: 500, desc: "Быстрее доставлять", effect: { tipChance: 0.5, tipMultiplier: 1.5 }, job: "courier" },
+            { name: "Машина (Лада)", price: 5000, desc: "Бюджетный автомобиль", effect: { taskPayMultiplier: 1.5 }, job: "taxi" },
+            { name: "Ноутбук", price: 10000, desc: "Работа быстрее", effect: { payMultiplier: 1.3 }, job: "freelancer" },
+            { name: "Камера", price: 20000, desc: "Контент лучше", effect: { payMultiplier: 1.4 }, job: "influencer" },
+            { name: "Машина (BMW)", price: 50000, desc: "Стильный транспорт", effect: { taskPayMultiplier: 2 }, job: "taxi" },
             { name: "Квартира", price: 50000, desc: "Уютное жилье", effect: { mood: 20 } },
             { name: "Дом", price: 200000, desc: "Просторный коттедж", effect: { mood: 30 } },
             { name: "Бассейн", price: 500000, desc: "Личная зона отдыха", effect: { mood: 40 } },
             { name: "Яхта", price: 1000000, desc: "Морские приключения", effect: { mood: 50 } },
             { name: "Частный самолет", price: 5000000, desc: "Полеты без границ", effect: { mood: 60 } }
         ];
+
+        // Save game state to localStorage
+        function saveGame() {
+            const gameState = {
+                balance,
+                energy,
+                hunger,
+                mood,
+                inventory,
+                currentJob: currentJob ? currentJob.name : null,
+                businessOwned,
+                businessLevel,
+                status,
+                debtRepaymentActive
+            };
+            localStorage.setItem('riseToRichesState', JSON.stringify(gameState));
+        }
+
+        // Load game state from localStorage
+        function loadGame() {
+            const savedState = localStorage.getItem('riseToRichesState');
+            if (savedState) {
+                const gameState = JSON.parse(savedState);
+                balance = gameState.balance || 0;
+                energy = gameState.energy || 100;
+                hunger = gameState.hunger || 100;
+                mood = gameState.mood || 100;
+                inventory = gameState.inventory || [];
+                currentJob = gameState.currentJob ? Object.values(jobs).find(job => job.name === gameState.currentJob) : null;
+                businessOwned = gameState.businessOwned || false;
+                businessLevel = gameState.businessLevel || 0;
+                status = gameState.status || "Бомж";
+                debtRepaymentActive = gameState.debtRepaymentActive || false;
+            }
+        }
 
         // Open modal
         function openModal(modalId) {
@@ -473,6 +518,7 @@
             updateShopAvailability();
             updateCasinoAvailability();
             checkDebt();
+            saveGame();
         }
 
         // Update status based on balance
@@ -493,6 +539,7 @@
                 playSound("cashSound");
             }
             document.getElementById("status").textContent = status;
+            saveGame();
         }
 
         // Change background based on balance
@@ -521,15 +568,18 @@
         function updateEnergy() {
             document.getElementById("energy").textContent = Math.floor(energy);
             updateTaskList();
+            saveGame();
         }
 
         function updateHunger() {
             document.getElementById("hunger").textContent = Math.floor(hunger);
             updateTaskList();
+            saveGame();
         }
 
         function updateMood() {
             document.getElementById("mood").textContent = Math.floor(mood);
+            saveGame();
         }
 
         // Regenerate energy (affected by mood)
@@ -541,7 +591,7 @@
             }
         }, 1000);
 
-        // Decrease hunger over time (much slower rate)
+        // Decrease hunger over time
         setInterval(() => {
             if (hunger > 0) {
                 hunger -= 1;
@@ -551,7 +601,7 @@
                     showNotification("Вы голодны! Купите еду в магазине.");
                 }
             }
-        }, 60000); // Changed from 15000ms to 60000ms (1 minute)
+        }, 60000);
 
         // Update job availability
         function updateJobAvailability() {
@@ -618,6 +668,7 @@
             } else {
                 inventoryList.innerHTML = inventory.map(item => `${item.name} (${item.desc})`).join("<br>");
             }
+            saveGame();
         }
 
         // Update business availability
@@ -635,6 +686,7 @@
             showNotification(`Вы устроились на работу: ${currentJob.name}`);
             playSound("clickSound");
             closeModal('jobsModal');
+            saveGame();
         }
 
         // Complete a task
@@ -645,21 +697,36 @@
                 mood -= 5;
                 if (mood < 0) mood = 0;
                 let pay = task.pay;
+
+                // Apply job-specific item bonuses
                 inventory.forEach(item => {
+                    if (item.job && currentJob && item.job === Object.keys(jobs).find(key => jobs[key] === currentJob)) {
+                        if (item.effect.payMultiplier) {
+                            pay *= item.effect.payMultiplier;
+                            showNotification(`Бонус от ${item.name}: +${((item.effect.payMultiplier - 1) * 100).toFixed(0)}% к оплате!`);
+                        }
+                        if (item.effect.tipChance && Math.random() < item.effect.tipChance) {
+                            const tip = pay * (item.effect.tipMultiplier - 1);
+                            pay *= item.effect.tipMultiplier;
+                            showNotification(`Получены чаевые $${Math.floor(tip)} благодаря ${item.name}!`);
+                        }
+                    }
                     if (item.effect && item.effect.taskPayMultiplier) {
                         pay *= item.effect.taskPayMultiplier;
                     }
                 });
+
                 if (hunger < 50) {
                     pay *= 0.5;
                     showNotification("Голод снижает доход! Купите еду.");
                 }
                 pay = Math.floor(pay);
 
-                // Calculate job duration based on job complexity
-                const baseDuration = 120000; // 2 minutes for 12 in-game hours
+                // Calculate job duration (1 to 5 minutes)
+                const minDuration = 60000; // 1 minute
+                const maxDuration = 300000; // 5 minutes
                 const maxPay = Math.max(...Object.values(jobs).map(j => j.pay));
-                const duration = baseDuration * (currentJob.pay / maxPay) * 1.5;
+                const duration = minDuration + (maxDuration - minDuration) * (currentJob.pay / maxPay);
                 showNotification(`Начато задание "${task.name}". Завершится через ${Math.floor(duration/1000)} сек.`);
 
                 // Disable task buttons during work
@@ -807,6 +874,7 @@
                 debtRepaymentActive = false;
                 showNotification("Долг погашен!");
             }
+            saveGame();
         }
 
         // Show notification
@@ -838,6 +906,7 @@
         }
 
         // Initialize game
+        loadGame();
         updateBalance();
         updateTaskList();
         updateShopAvailability();
@@ -845,6 +914,9 @@
         updateEnergy();
         updateHunger();
         updateMood();
+        if (businessOwned) {
+            startBusinessIncome();
+        }
     </script>
 </body>
 </html>
